@@ -9,7 +9,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    * { cursor: image-set(url(cursor_v5_2x.png) 2x) 24 3, pointer !important; }
+    * { cursor: image-set(url(cursor.png) 2x) 24 3, pointer !important; }
 
     body {
       background: #1a1a1a;
@@ -26,12 +26,20 @@
     .machine {
       position: relative;
       width: min(480px, 88vw);
-      aspect-ratio: 989 / 1356;
-      background: #A8A8A8;
-      border-radius: 50%;
-      box-shadow:
-        inset 0 -16px 11px 8px rgba(0,0,0,0.44),
-        inset 0 22px 14px 6px rgba(255,255,255,0.70);
+      aspect-ratio: 969 / 1344;
+      /* egg body is drawn as an exact SVG silhouette (.egg-body); the
+         container itself is transparent and only provides the 969×1344
+         Figma coordinate frame that screen + buttons are positioned in */
+      background: transparent;
+    }
+    /* exact egg silhouette traced from Figma "new egg shape" (398:1156) */
+    .egg-body {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
     }
 
     /* ── Physical side buttons ──────────────────────────── */
@@ -44,20 +52,67 @@
     }
     .phys-btn:active { filter: brightness(0.95); }
     .phys-btn svg { display: block; width: 100%; height: 100%; }
+    /* inward-pointing chevron icon centered on each side button (Figma 384:1097) */
+    /* chevrons anchored to each button's inner (screen-facing) edge so all three
+       on a side share one vertical line; uniform px width keeps them aligned */
+    .phys-btn .phys-chev {
+      position: absolute;
+      top: 50%;
+      right: 6px; /* left buttons: inset from inner edge */
+      width: 18px;
+      height: auto;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .phys-btn .phys-chev.flip { right: auto; left: 6px; transform: translateY(-50%) scaleX(-1); }
+    /* top buttons: chevron nudged down */
+    .btn-L1 .phys-chev, .btn-R1 .phys-chev { top: calc(50% + 20px); }
+    .btn-L3 .phys-chev, .btn-R3 .phys-chev { top: calc(50% - 17px); }
+    /* chevron turns light red (matching screen text/buttons) when the button has an action */
+    .phys-btn .phys-chev path { stroke: #939393; }
+    .phys-btn.chev-active .phys-chev path { stroke: #ff7171; }
 
-    .btn-L1 { left: calc(3.74% + 3px); top: calc(22.42% + 9px); width: 12.76%; height: 18.21%; }
-    .btn-L2 { left: calc(3.74% - 2px); top: calc(43.99% + 1px); width: 14.16%; height: 19.25%; }
-    .btn-L3 { left: calc(3.74% + 11px); top: calc(65.05% + 1px); width: 11.33%; height: 18.95%; }
-    .btn-R1 { right: calc(3.74% + 3px); top: calc(22.42% + 9px); width: 12.76%; height: 18.21%; }
-    .btn-R2 { right: calc(3.74% - 2px); top: calc(43.99% + 1px); width: 14.16%; height: 19.25%; }
-    .btn-R3 { right: calc(3.74% + 11px); top: calc(65.05% + 1px); width: 11.33%; height: 18.95%; }
+    /* boxes from Figma 384:1097 (machine 969×1344); inner straight edges align to screen bezel */
+    .btn-L1 { left: 6.52%;  top: 25.22%; width: 11.85%; height: 21.73%; }
+    .btn-L2 { left: 4.85%;  top: 48.14%; width: 13.52%; height: 16.22%; }
+    .btn-L3 { left: 6.67%;  top: 65.55%; width: 11.70%; height: 18.53%; }
+    .btn-R1 { left: 81.63%; top: 25.22%; width: 11.85%; height: 21.73%; }
+    .btn-R2 { left: 81.63%; top: 48.14%; width: 13.52%; height: 16.22%; }
+    .btn-R3 { left: 81.63%; top: 65.55%; width: 11.70%; height: 18.53%; }
+
+    /* ── Top logo button (Figma "new egg shape" frame 398:1272) ── */
+    .logo-btn {
+      position: absolute;
+      left: 37.87%;
+      top: 12.05%;
+      width: 25.08%;
+      height: 8.01%;
+      padding: 0;
+      border: none;
+      border-radius: 999px; /* stadium / pill */
+      background: #E6E6E6;
+      box-shadow:
+        inset 0 6px 4px rgba(255,255,255,0.95),
+        inset 0 -7px 9px rgba(0,0,0,0.34);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+      transition: filter 0.2s;
+    }
+    .logo-btn:active { filter: brightness(0.96); }
+    .logo-btn.phys-pressed { transform: scale(0.9); } /* same shrink as the side buttons */
+    .logo-btn img { width: 82.7%; height: auto; display: block; pointer-events: none; }
 
     /* ── Display ────────────────────────────────────────── */
     .display {
       position: absolute;
-      left: calc(22.14% - 12px);
+      /* black screen narrowed to Figma ratio 513/969 = 52.94% of machine width,
+         re-centered horizontally; vertical position/height unchanged */
+      left: calc(23.53% - 12px);
       top: calc(25.15% - 12px - 5px + 4px);
-      width: calc(55.81% + 24px);
+      width: calc(52.94% + 24px);
       height: calc(58.26% + 24px);
       border-radius: 13px;
       background: #E6E6E6;
@@ -74,6 +129,18 @@
       overflow: hidden;
       pointer-events: none;
     }
+
+    /* wrong-button feedback: a brief horizontal shake of the on-screen content
+       only (the black background + scanlines stay put) */
+    @keyframes screen-shake {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-3px); }
+      30% { transform: translateX(3px); }
+      45% { transform: translateX(-2px); }
+      60% { transform: translateX(2px); }
+      80% { transform: translateX(-1px); }
+    }
+    .screen.shake { animation: screen-shake 0.32s ease both; }
 
     .screen-bg {
       position: absolute;
@@ -118,6 +185,33 @@
     }
     .display-inner.is-paused .pause-badge { display: block; }
 
+    .timer-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 26;
+      display: none;
+      font-family: 'Digital-7 Mono', 'Digital-7', monospace;
+      font-size: calc(var(--hdr-font) * 1.05);
+      letter-spacing: 0.1em;
+      color: #ff7171;
+      padding: 0.3em 0.6em;
+      border: 1.5px solid #ff7171;
+      border-radius: 3px;
+      background: rgba(0, 0, 0, 0.82);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    @keyframes timer-pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50%       { transform: translate(-50%, -50%) scale(1.15); }
+    }
+    .display-inner.timer-alarming .timer-badge {
+      display: block;
+      animation: timer-pulse 1s ease-in-out infinite;
+    }
+
     /* ── Screen root ────────────────────────────────────── */
     .screen {
       position: absolute;
@@ -143,12 +237,39 @@
       font-size: var(--hdr-font);
       letter-spacing: 0.06em;
       flex-shrink: 0;
+      /* match the divider/grid width so header text aligns with the bar edges */
+      width: 93.5%;
+      margin: 0 auto;
+    }
+
+    /* home hint: centered text flanked by up-arrows sized to the text */
+    .home-hint {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5em;
+      white-space: nowrap;
+      font-size: clamp(8px, 2.55vw, 14px);
+    }
+    .home-up-arrow {
+      height: 1em;
+      width: auto;
+      display: block;
+      flex-shrink: 0;
+      animation: arrow-float 2s ease-in-out infinite;
+    }
+    @keyframes arrow-float {
+      0%, 100% { transform: translateY(0.18em); }
+      50%      { transform: translateY(-0.18em); }
     }
 
     .screen-divider {
       height: 1.56px;
       background: #ff7171;
-      margin: 1.5% 0;
+      /* width matches the 6-button grid so the bar lines up with the buttons' edges */
+      width: 93.5%;
+      margin: 1.5% auto;
       flex-shrink: 0;
     }
 
@@ -218,7 +339,7 @@
       flex-shrink: 0;
       text-align: center;
       font-family: 'Digital-7 Mono', 'Digital-7', monospace;
-      font-size: var(--hdr-font);
+      font-size: clamp(12px, 3.6vw, 20px);
       letter-spacing: 0.06em;
       color: #ff7171;
       margin-bottom: 20px;
@@ -236,9 +357,11 @@
       width: auto;
       max-height: 100%;
       margin: 0 auto;
-      transform: scale(0.93);
+      transform: scale(0.9765); /* 0.93 + 5% */
       transform-origin: center;
     }
+    /* sd-grid keeps its hook for any select-drink-only tweaks, but must share the
+       exact geometry of every other grid so the six buttons line up everywhere */
 
     .grid-cell {
       border: none;
@@ -253,10 +376,10 @@
       gap: 8%;
       padding: 6%;
     }
-    /* Favourite cells: star-shaped frame */
+    /* Favourite cells: star-shaped frame. No aspect-ratio — they must fill the
+       grid track exactly like every other cell so all six buttons stay uniform. */
     .grid-cell.fav-cell {
       border-radius: 0;
-      aspect-ratio: 1 / 1;
       padding: 6%;
     }
 
@@ -394,6 +517,14 @@
       white-space: nowrap;
     }
 
+    /* ── Config screen icons ──────────────────────────────── */
+    .cfg-icon {
+      width: clamp(19.6px, 5.95vw, 33.6px);
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 0 3px rgba(225,0,0,0.6));
+    }
+
     /* ── CONFIRM SELECTION screen ───────────────────────── */
     .cfm {
       flex: 1;
@@ -496,18 +627,23 @@
     .prep-error.visible { opacity: 1; }
 
     /* ── SETTINGS clock / timer screens ─────────────────── */
-    .set-time {
-      flex: 1;
+    /* head spans the top two rows of the standard screen-grid so the bottom
+       back-arrow + action cells line up exactly with the configuration screen */
+    .set-head {
+      grid-column: 1 / 3;
+      grid-row: 1 / 3;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      align-items: stretch;
+      justify-content: center;
       gap: clamp(6px, 2vw, 12px);
-      padding-top: 3%;
+      min-height: 0;
+      padding: 0;
     }
     .set-time-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: clamp(5px, 2.4vw, 13px);
+      gap: clamp(3px, 1.9vw, 9px);
       height: clamp(34px, 10vw, 56px);
       flex-shrink: 0;
     }
@@ -549,6 +685,8 @@
       height: clamp(46px, 14vw, 84px);
       margin: 0 auto;
       flex-shrink: 0;
+      padding-left: 17px;
+      padding-right: 17px;
     }
     .set-run-num {
       font-family: 'Digital-7 Mono', 'Digital-7', monospace;
@@ -558,6 +696,9 @@
       letter-spacing: 0.08em;
       white-space: nowrap;
     }
+    .set-run-row { display: flex; align-items: baseline; }
+    .set-run-l   { transform: translateX(6px); }
+    .set-run-r   { transform: translateX(-6px); }
 
     /* ── MESSAGE screen (drink-ready, favorite-saved) ───── */
     .msg-body {
@@ -602,80 +743,100 @@
       transform: translate(-50%, -50%);
     }
 
-    /* ── Gear button ────────────────────────────────────── */
-    .gear-btn {
-      position: absolute;
-      bottom: 5%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: none;
-      border: none;
-      opacity: 0.5;
-      transition: opacity 0.2s;
-      padding: 2%;
-    }
-    .gear-btn:hover { opacity: 0.85; }
-    .gear-btn svg { width: clamp(14px, 3.5vw, 22px); height: clamp(14px, 3.5vw, 22px); }
   </style>
 </head>
 <body>
 
 <div class="machine">
 
-  <!-- LEFT buttons -->
+  <!-- Egg body: exact silhouette traced from Figma "new egg shape" (398:1156), viewBox = 969×1344 frame -->
+  <svg class="egg-body" viewBox="0 0 969 1344" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="egg-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#A8A8A8"/>
+        <stop offset="0.55" stop-color="#A8A8A8"/>
+        <stop offset="1" stop-color="#C9C9C9"/>
+      </linearGradient>
+      <filter id="egg-fi" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+        <feFlood flood-opacity="0" result="bg"/>
+        <feBlend mode="normal" in="SourceGraphic" in2="bg" result="shape"/>
+        <!-- dark inner shadow rising from the bottom edge -->
+        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+        <feOffset dy="-26"/>
+        <feGaussianBlur stdDeviation="20"/>
+        <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.40 0"/>
+        <feBlend mode="normal" in2="shape" result="e1"/>
+        <!-- white highlight along the top edge -->
+        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+        <feOffset dy="24"/>
+        <feGaussianBlur stdDeviation="14"/>
+        <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.85 0"/>
+        <feBlend mode="normal" in2="e1" result="e2"/>
+      </filter>
+    </defs>
+    <g filter="url(#egg-fi)"><path d="M486.00 91.54C498.92 91.54 512.91 92.09 525.00 93.75C535.72 95.22 544.68 97.60 555.00 100.35C566.28 103.34 578.45 106.99 590.00 111.28C601.78 115.67 613.67 120.73 625.00 126.47C636.34 132.23 646.94 138.88 658.00 145.79C669.60 153.04 681.95 160.63 693.00 169.08C703.94 177.44 713.69 186.73 724.00 196.16C734.69 205.94 745.85 216.06 756.00 226.80C766.19 237.59 775.59 249.06 785.00 260.77C794.60 272.70 804.19 285.03 813.00 297.78C821.86 310.61 829.90 324.00 838.00 337.55C846.24 351.31 854.52 365.36 862.00 379.74C869.52 394.18 876.51 409.00 883.00 424.02C889.52 439.10 895.51 454.50 901.00 470.04C906.51 485.63 911.50 501.47 916.00 517.42C920.50 533.38 924.50 549.55 928.00 565.78C931.50 581.99 934.50 598.36 937.00 614.73C939.50 631.06 941.50 647.49 943.00 663.88C944.49 680.19 945.50 696.56 946.00 712.83C946.49 728.99 946.51 745.16 946.00 761.19C945.50 777.08 944.35 792.91 943.00 808.57C941.67 824.04 940.19 839.44 938.00 854.59C935.84 869.53 933.03 884.33 930.00 898.87C927.02 913.15 923.71 927.26 920.00 941.06C916.36 954.57 912.40 967.88 908.00 980.83C903.71 993.46 898.92 1005.83 894.00 1017.84C889.24 1029.47 884.57 1040.93 879.00 1051.81C873.55 1062.45 866.99 1072.60 861.00 1082.45C855.32 1091.80 850.11 1101.02 844.00 1109.53C838.08 1117.78 831.51 1125.56 825.00 1132.82C818.82 1139.71 812.39 1146.22 806.00 1152.14C800.05 1157.65 794.29 1162.92 788.00 1167.33C781.93 1171.58 774.91 1175.18 769.00 1178.26C764.03 1180.86 762.93 1183.05 755.00 1184.86C721.89 1192.41 574.92 1187.07 485.00 1187.07C395.25 1187.06 248.03 1192.66 216.00 1184.86C208.54 1183.04 207.55 1180.87 203.00 1178.26C197.64 1175.19 191.61 1171.47 186.00 1167.33C179.94 1162.85 173.95 1157.65 168.00 1152.14C161.61 1146.22 155.18 1139.71 149.00 1132.82C142.49 1125.56 136.06 1117.74 130.00 1109.53C123.70 1100.99 117.87 1091.84 112.00 1082.45C105.86 1072.64 99.75 1062.39 94.00 1051.81C88.06 1040.87 82.12 1029.54 77.00 1017.84C71.77 1005.90 67.44 993.44 63.00 980.83C58.43 967.86 53.97 954.58 50.00 941.06C45.95 927.27 42.15 913.17 39.00 898.87C35.80 884.35 33.16 869.53 31.00 854.59C28.81 839.44 27.33 824.04 26.00 808.57C24.65 792.91 23.67 777.07 23.00 761.19C22.33 745.16 21.51 728.99 22.00 712.83C22.50 696.55 24.34 680.20 26.00 663.88C27.67 647.50 29.18 631.03 32.00 614.73C34.84 598.33 39.00 582.00 43.00 565.78C47.00 549.57 51.01 533.35 56.00 517.42C61.00 501.44 66.98 485.65 73.00 470.04C78.99 454.52 85.15 439.10 92.00 424.02C98.82 409.00 106.15 394.18 114.00 379.74C121.82 365.36 130.43 351.31 139.00 337.55C147.44 324.00 155.94 310.65 165.00 297.78C173.95 285.07 183.27 272.66 193.00 260.77C202.61 249.01 212.73 237.67 223.00 226.80C233.07 216.15 243.51 205.90 254.00 196.16C264.19 186.69 274.17 177.47 285.00 169.08C295.84 160.68 307.62 153.00 319.00 145.79C329.96 138.84 340.86 132.28 352.00 126.47C362.86 120.81 373.78 115.65 385.00 111.28C396.12 106.95 408.05 103.35 419.00 100.35C428.99 97.61 437.62 95.22 448.00 93.75C459.75 92.08 473.25 91.55 486.00 91.54Z" fill="url(#egg-grad)"/></g>
+  </svg>
+
+  <!-- Top logo button (Figma "new egg shape" frame 398:1272) -->
+  <button class="logo-btn" onclick="pressButton('LOGO')" aria-label="RLB">
+    <img src="logo.png" alt="RLB">
+  </button>
+
+  <!-- LEFT buttons (exact Figma vectors 384:1144/1142/1143, oriented for left side) -->
   <button class="phys-btn btn-L1" onclick="pressButton('L1')" aria-label="L1">
-    <svg preserveAspectRatio="none" viewBox="0 0 135.171 268.052" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><filter id="fi-L1" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8.18479"/><feGaussianBlur stdDeviation="5.32011"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="effect1_innerShadow"/></filter></defs>
-      <g filter="url(#fi-L1)"><path d="M135.171 251.682V16.3696C135.171 7.32891 127.842 0 118.802 0H76.8997C71.6806 0 66.7402 2.42776 63.965 6.84788C30.0785 60.8195 8.61925 180.925 0.122092 250.062C-1.06209 259.697 6.52067 268.052 16.2282 268.052H118.802C127.842 268.052 135.171 260.723 135.171 251.682Z" fill="#E6E6E6"/></g>
+    <svg class="phys-chev" viewBox="0 0 24 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 8 L17 20 L8 32" stroke="#939393" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg preserveAspectRatio="none" viewBox="0 0 114.793 292" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#fi-L1)"><path d="M114.793 6.708L114.793 279C114.793 286.18 108.973 292 101.793 292L12.755 292C5.211 292 -0.766 285.625 0.08 278.128C9.963 190.564 55.112 69.341 102.709 2.729C103.953 0.989 105.947 0 108.085 0C111.79 0 114.793 3.003 114.793 6.708Z" fill="#E6E6E6"/></g>
+      <defs><filter id="fi-L1" x="0" y="-8" width="114.793" height="303" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="bg"/><feBlend mode="normal" in="SourceGraphic" in2="bg" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8"/><feGaussianBlur stdDeviation="5.2"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="e1"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="7"/><feGaussianBlur stdDeviation="1.5"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.98 0"/><feBlend mode="normal" in2="e1" result="e2"/></filter></defs>
     </svg>
   </button>
   <button class="phys-btn btn-L2" onclick="pressButton('L2')" aria-label="L2">
-    <svg style="transform:scaleX(-1)" preserveAspectRatio="none" viewBox="0 0 139.632 261.402" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><filter id="fi-L2" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8.18479"/><feGaussianBlur stdDeviation="5.32011"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="effect1_innerShadow"/></filter></defs>
-      <g filter="url(#fi-L2)"><path d="M0 248.101V13.3003C0 5.95474 5.95473 0 13.3003 0H121.903C128.331 0 133.862 4.58649 134.812 10.9437C147.733 97.3803 131.87 200.68 120.098 251.391C118.725 257.303 113.413 261.402 107.343 261.402H13.3003C5.95474 261.402 0 255.447 0 248.101Z" fill="#E6E6E6"/></g>
+    <svg class="phys-chev" viewBox="0 0 24 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 8 L17 20 L8 32" stroke="#939393" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg preserveAspectRatio="none" viewBox="0 0 131 218" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#fi-L2)"><path d="M131 205L131 13C131 5.82 125.18 0 118 0L21.75 0C15.654 0 10.358 4.223 9.199 10.207C-4.638 81.598 -1.274 166.448 8.815 208.815C10.131 214.342 15.183 218 20.864 218L118 218C125.18 218 131 212.18 131 205Z" fill="#E6E6E6"/></g>
+      <defs><filter id="fi-L2" x="0" y="-8" width="131" height="229" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="bg"/><feBlend mode="normal" in="SourceGraphic" in2="bg" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8"/><feGaussianBlur stdDeviation="5.2"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="e1"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="7"/><feGaussianBlur stdDeviation="1.5"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.98 0"/><feBlend mode="normal" in2="e1" result="e2"/></filter></defs>
     </svg>
   </button>
   <button class="phys-btn btn-L3" onclick="pressButton('L3')" aria-label="L3">
-    <svg style="transform:scaleX(-1)" preserveAspectRatio="none" viewBox="0 0 110 256.798" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><filter id="fi-L3" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8.18479"/><feGaussianBlur stdDeviation="5.32011"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="effect1_innerShadow"/></filter></defs>
-      <g filter="url(#fi-L3)"><path d="M0 250.604V13.3003C0 5.95474 5.95474 0 13.3003 0H97.1379C104.892 0 111.017 6.5993 109.859 14.2661C98.1931 91.4739 41.5328 202.592 11.4837 253.808C10.3775 255.693 8.37934 256.798 6.19334 256.798C2.77286 256.798 0 254.025 0 250.604Z" fill="#E6E6E6"/></g>
+    <svg class="phys-chev" viewBox="0 0 24 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 8 L17 20 L8 32" stroke="#939393" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg preserveAspectRatio="none" viewBox="0 0 113.418 249" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#fi-L3)"><path d="M113.418 242.539L113.418 13C113.418 5.82 107.598 0 100.418 0L12.543 0C4.939 0 -1.056 6.495 0.156 14.002C12.241 88.822 70.554 196.371 101.53 246.027C102.703 247.909 104.74 249 106.957 249C110.525 249 113.418 246.107 113.418 242.539Z" fill="#E6E6E6"/></g>
+      <defs><filter id="fi-L3" x="0" y="-8" width="113.418" height="260" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="bg"/><feBlend mode="normal" in="SourceGraphic" in2="bg" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8"/><feGaussianBlur stdDeviation="5.2"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="e1"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="7"/><feGaussianBlur stdDeviation="1.5"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.98 0"/><feBlend mode="normal" in2="e1" result="e2"/></filter></defs>
     </svg>
   </button>
 
   <!-- Display -->
   <div class="display">
     <div class="display-inner">
-      <img class="screen-bg" src="screen-bg.png" alt="">
+      <img class="screen-bg" src="screen.png" alt="">
       <div class="screen" id="screen-root"></div>
       <div class="pause-badge" id="pause-badge">&#10073;&#10073; PAUSED</div>
+      <div class="timer-badge" id="timer-badge">TIMER</div>
     </div>
   </div>
 
-  <!-- RIGHT buttons -->
+  <!-- RIGHT buttons (exact Figma vectors, mirrored from the left side) -->
   <button class="phys-btn btn-R1" onclick="pressButton('R1')" aria-label="R1">
-    <svg style="transform:scaleX(-1)" preserveAspectRatio="none" viewBox="0 0 135.171 268.052" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><filter id="fi-R1" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8.18479"/><feGaussianBlur stdDeviation="5.32011"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="effect1_innerShadow"/></filter></defs>
-      <g filter="url(#fi-R1)"><path d="M135.171 251.682V16.3696C135.171 7.32891 127.842 0 118.802 0H76.8997C71.6806 0 66.7402 2.42776 63.965 6.84788C30.0785 60.8195 8.61925 180.925 0.122092 250.062C-1.06209 259.697 6.52067 268.052 16.2282 268.052H118.802C127.842 268.052 135.171 260.723 135.171 251.682Z" fill="#E6E6E6"/></g>
+    <svg class="phys-chev flip" viewBox="0 0 24 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 8 L17 20 L8 32" stroke="#939393" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg preserveAspectRatio="none" viewBox="0 0 114.793 292" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#fi-R1)"><path d="M0 6.708L0 279C0 286.18 5.82 292 13 292L102.038 292C109.582 292 115.559 285.625 114.713 278.128C104.83 190.564 59.681 69.341 12.084 2.729C10.84 0.989 8.846 0 6.708 0C3.003 0 0 3.003 0 6.708Z" fill="#E6E6E6"/></g>
+      <defs><filter id="fi-R1" x="0" y="-8" width="114.793" height="303" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="bg"/><feBlend mode="normal" in="SourceGraphic" in2="bg" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8"/><feGaussianBlur stdDeviation="5.2"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="e1"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="7"/><feGaussianBlur stdDeviation="1.5"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.98 0"/><feBlend mode="normal" in2="e1" result="e2"/></filter></defs>
     </svg>
   </button>
   <button class="phys-btn btn-R2" onclick="pressButton('R2')" aria-label="R2">
-    <svg preserveAspectRatio="none" viewBox="0 0 139.632 261.402" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><filter id="fi-R2" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8.18479"/><feGaussianBlur stdDeviation="5.32011"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="effect1_innerShadow"/></filter></defs>
-      <g filter="url(#fi-R2)"><path d="M0 248.101V13.3003C0 5.95474 5.95473 0 13.3003 0H121.903C128.331 0 133.862 4.58649 134.812 10.9437C147.733 97.3803 131.87 200.68 120.098 251.391C118.725 257.303 113.413 261.402 107.343 261.402H13.3003C5.95474 261.402 0 255.447 0 248.101Z" fill="#E6E6E6"/></g>
+    <svg class="phys-chev flip" viewBox="0 0 24 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 8 L17 20 L8 32" stroke="#939393" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg preserveAspectRatio="none" viewBox="0 0 131 218" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#fi-R2)"><path d="M0 205L0 13C0 5.82 5.82 0 13 0L109.25 0C115.346 0 120.642 4.223 121.801 10.207C135.638 81.598 132.274 166.448 122.185 208.815C120.869 214.342 115.817 218 110.136 218L13 218C5.82 218 0 212.18 0 205Z" fill="#E6E6E6"/></g>
+      <defs><filter id="fi-R2" x="0" y="-8" width="131" height="229" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="bg"/><feBlend mode="normal" in="SourceGraphic" in2="bg" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8"/><feGaussianBlur stdDeviation="5.2"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="e1"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="7"/><feGaussianBlur stdDeviation="1.5"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.98 0"/><feBlend mode="normal" in2="e1" result="e2"/></filter></defs>
     </svg>
   </button>
   <button class="phys-btn btn-R3" onclick="pressButton('R3')" aria-label="R3">
-    <svg preserveAspectRatio="none" viewBox="0 0 110 256.798" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><filter id="fi-R3" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8.18479"/><feGaussianBlur stdDeviation="5.32011"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="effect1_innerShadow"/></filter></defs>
-      <g filter="url(#fi-R3)"><path d="M0 250.604V13.3003C0 5.95474 5.95474 0 13.3003 0H97.1379C104.892 0 111.017 6.5993 109.859 14.2661C98.1931 91.4739 41.5328 202.592 11.4837 253.808C10.3775 255.693 8.37934 256.798 6.19334 256.798C2.77286 256.798 0 254.025 0 250.604Z" fill="#E6E6E6"/></g>
-    </svg>
-  </button>
-
-  <!-- Gear -->
-  <button class="gear-btn" onclick="pressButton('SETTINGS')" aria-label="Settings">
-    <svg viewBox="0 0 57 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M47.7 16.6L46.9 16.2C46.8 16.1 46.7 16.1 46.6 16.0C45.9 15.6 45.3 15.1 44.8 14.4C44.8 14.3 44.7 14.2 44.7 14.1C44.6 14.0 44.5 13.9 44.5 13.8C44.1 13.1 43.9 12.3 43.9 11.5L43.9 10.4C43.9 9.5 43.9 9.1 43.6 8.3C43.4 7.6 43.0 7.0 42.5 6.4C41.9 5.7 41.1 5.3 39.6 4.4L38.3 3.6C36.8 2.8 36.0 2.3 35.2 2.1C34.5 2.0 33.7 2.0 33.0 2.2C32.2 2.4 31.4 2.9 29.8 3.8L28.9 4.3C28.8 4.4 28.7 4.4 28.6 4.5C27.9 4.9 27.1 5.1 26.3 5.1C26.2 5.1 26.1 5.1 25.9 5.1C25.8 5.1 25.7 5.1 25.6 5.1C24.8 5.1 24.0 4.9 23.2 4.5C23.1 4.4 23.1 4.4 22.9 4.3L22.0 3.8C20.3 2.8 19.5 2.3 18.7 2.1C18.0 2.0 17.2 2.0 16.5 2.2C15.6 2.4 14.8 2.9 13.3 3.7L11.9 4.5L10.5 5.4C9.0 6.3 8.2 6.8 7.6 7.5C7.1 8.1 6.7 8.8 6.5 9.5C6.2 10.3 6.2 11.2 6.2 13.0L6.2 14.5C6.2 14.6 6.2 14.7 6.2 14.8C6.2 15.6 6.0 16.4 5.6 17.1C5.6 17.2 5.5 17.2 5.5 17.3C5.4 17.4 5.4 17.5 5.3 17.6C4.9 18.3 4.3 18.9 3.6 19.3C3.5 19.4 3.4 19.4 3.3 19.5L2.3 20.0C0.7 20.9 -0.1 21.4 -0.7 22.0C-1.2 22.6 -1.6 23.3 -1.8 24.0C-2.1 24.8 -2.1 25.7 -2.1 27.5L-2.1 29.0C-2.1 30.8 -2.1 31.7 -1.8 32.5C-1.5 33.2 -1.1 33.9 -0.6 34.5C-0.0 35.1 0.8 35.6 2.3 36.4L3.3 37.0C3.5 37.1 3.6 37.1 3.7 37.2C4.4 37.6 5.0 38.2 5.5 38.9C5.5 39.0 5.6 39.1 5.6 39.2C5.6 39.2 5.7 39.3 5.7 39.4C6.1 40.1 6.3 40.9 6.3 41.6C6.3 41.7 6.3 41.8 6.2 42.0L6.2 43.1C6.2 44.9 6.2 45.9 6.5 46.7C6.7 47.4 7.1 48.1 7.6 48.7C8.2 49.3 9.1 49.8 10.5 50.6L11.8 51.4C13.3 52.2 14.0 52.6 14.9 52.8C15.6 52.9 16.4 52.9 17.1 52.7C17.9 52.5 18.7 52.0 20.3 51.1L21.2 50.6C21.3 50.5 21.4 50.5 21.5 50.4C22.2 50.0 23.0 49.7 23.8 49.7C23.9 49.7 24.0 49.7 24.2 49.7C24.3 49.7 24.5 49.7 24.6 49.7C25.4 49.7 26.2 49.9 27.0 50.3C27.0 50.3 27.1 50.4 27.2 50.4L28.1 50.9C29.7 51.9 30.5 52.3 31.4 52.5C32.1 52.7 32.9 52.7 33.6 52.5C34.5 52.3 35.3 51.8 36.8 50.9L38.2 50.1C39.7 49.2 40.5 48.7 41.1 48.0C41.7 47.4 42.1 46.7 42.3 46.0C42.6 45.2 42.6 44.3 42.5 42.7L42.5 41.5C42.5 41.3 42.5 41.2 42.5 41.1C42.5 40.3 42.7 39.5 43.1 38.8C43.1 38.7 43.2 38.6 43.2 38.5C43.3 38.4 43.3 38.3 43.4 38.2C43.8 37.5 44.4 36.9 45.2 36.5C45.3 36.4 45.4 36.4 45.5 36.3L46.5 35.8C48.0 34.9 48.8 34.5 49.4 33.8C49.9 33.2 50.3 32.5 50.5 31.8C50.8 31.0 50.8 30.1 50.8 28.4L50.8 26.8C50.8 25.1 50.8 24.2 50.5 23.4C50.3 22.7 49.9 22.0 49.3 21.4C48.7 20.7 47.9 20.3 46.4 19.4Z" stroke="#939393" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="28.5" cy="27" r="8.4" stroke="#939393" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+    <svg class="phys-chev flip" viewBox="0 0 24 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 8 L17 20 L8 32" stroke="#939393" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg preserveAspectRatio="none" viewBox="0 0 113.418 249" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#fi-R3)"><path d="M0 242.539L0 13C0 5.82 5.82 0 13 0L100.875 0C108.479 0 114.474 6.495 113.262 14.002C101.177 88.822 42.864 196.371 11.888 246.027C10.715 247.909 8.678 249 6.461 249C2.893 249 0 246.107 0 242.539Z" fill="#E6E6E6"/></g>
+      <defs><filter id="fi-R3" x="0" y="-8" width="113.418" height="260" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="bg"/><feBlend mode="normal" in="SourceGraphic" in2="bg" result="shape"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="-8"/><feGaussianBlur stdDeviation="5.2"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.42 0"/><feBlend mode="normal" in2="shape" result="e1"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="7"/><feGaussianBlur stdDeviation="1.5"/><feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.98 0"/><feBlend mode="normal" in2="e1" result="e2"/></filter></defs>
     </svg>
   </button>
 
@@ -704,24 +865,116 @@
     prepTimer: null,
     prepSeg: 0,              // lit segments in IN PREPARATION (preserved across detours)
     prepStartTime: null,     // timestamp when current brew began (null = not brewing)
+    cancelExpired: false,    // true once the 3-second cancel window has closed
+    cancelHideTimer: null,
     paused: false,
     // settings
     language: 'ENGLISH',
-    clockH: 15, clockM: 4,
-    clockBackupH: 15, clockBackupM: 4,
-    timerMin: 15, timerSec: 4,
-    runMin: 3, runSec: 35,
+    clockH: 15, clockM: 4,     // editor values for the CHANGE CLOCK screen
+    clockOffsetMs: 0,          // displayed clock = real time + this offset (0 = real time)
+    timerMin: 0, timerSec: 0,
+    runMin: 0, runSec: 0,
     runTimer: null,
+    timerArmed: false,       // true once START is pressed → home shows live countdown
   };
 
-  // ── Helpers ──────────────────────────────────────────────
-  function getTime() {
-    // On settings screens, show the manually set clock time instead of real time.
-    if (STATE.screen === 'settings-clock' || STATE.screen === 'settings') {
-      return pad(STATE.clockH) + ':' + pad(STATE.clockM);
+  // Text for the home footer: live countdown once armed, else the set value.
+  function timerText() {
+    const m = STATE.timerArmed ? STATE.runMin : STATE.timerMin;
+    const s = STATE.timerArmed ? STATE.runSec : STATE.timerSec;
+    return T('TIMER') + ' : ' + pad(m) + ' : ' + pad(s);
+  }
+  function updateHomeFooter() {
+    document.querySelectorAll('.home-footer').forEach(el => el.textContent = timerText());
+  }
+
+  // ── Sound (Web Audio, fully synthesized — no audio files) ────────────────
+  // The AudioContext starts suspended until the first user gesture; since every
+  // sound is triggered by a button press, the first click unlocks it (and the
+  // timer alarm reuses that already-unlocked context).
+  const Sound = (() => {
+    let ctx = null;
+    let muted = false;
+    let _alarmIv = null;
+    function ac() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
     }
+    // One enveloped oscillator note. `when` = delay in seconds from now.
+    function tone({ freq = 440, type = 'sine', dur = 0.1, gain = 0.15, attack = 0.004, when = 0 }) {
+      const c = ac();
+      if (!c || muted) return;
+      const t0 = c.currentTime + when;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g).connect(c.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.03);
+    }
+    return {
+      toggleMute() { muted = !muted; return muted; },
+      // soft, short blip on a valid press
+      click() { tone({ freq: 900, type: 'triangle', dur: 0.035, gain: 0.05 }); },
+      // low detuned buzz to pair with the wrong-button shake
+      error() {
+        tone({ freq: 96, type: 'sawtooth', dur: 0.24, gain: 0.039 });
+        tone({ freq: 90, type: 'sawtooth', dur: 0.24, gain: 0.03 });
+      },
+      // pleasant rising two-note chime for CONFIRM / START
+      confirm() {
+        tone({ freq: 660, type: 'sine', dur: 0.13, gain: 0.13, when: 0 });
+        tone({ freq: 990, type: 'sine', dur: 0.20, gain: 0.13, when: 0.10 });
+      },
+      // repeated beeps when the timer reaches 00:00
+      alarm() {
+        for (let i = 0; i < 4; i++) {
+          tone({ freq: 880, type: 'square', dur: 0.13, gain: 0.11, when: i * 0.24 });
+        }
+      },
+      startAlarm() {
+        this.alarm();
+        if (_alarmIv) clearInterval(_alarmIv);
+        _alarmIv = setInterval(() => this.alarm(), 1200);
+      },
+      stopAlarm() {
+        if (_alarmIv) { clearInterval(_alarmIv); _alarmIv = null; }
+      },
+    };
+  })();
+
+  // ── Helpers ──────────────────────────────────────────────
+  // Displayed clock = real device time shifted by the user-set offset (ms).
+  // Default offset 0 → shows real time; setting the clock re-anchors it and it
+  // keeps ticking forward from there.
+  function clockNowMs() {
     const n = new Date();
-    return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+    const ms = ((n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds()) * 1000 + n.getMilliseconds()) + STATE.clockOffsetMs;
+    return ((ms % 86400000) + 86400000) % 86400000;
+  }
+  function currentClockHM() {
+    const totalMin = Math.floor(clockNowMs() / 60000);
+    return [Math.floor(totalMin / 60) % 24, totalMin % 60];
+  }
+  function getTime() {
+    const [h, m] = currentClockHM();
+    return pad(h) + ':' + pad(m);
+  }
+  // Re-anchor the displayed clock so it reads clockH:clockM right now, then ticks on.
+  function applyClockSetting() {
+    const n = new Date();
+    const realMs = (n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds()) * 1000 + n.getMilliseconds();
+    const setMs = (STATE.clockH * 3600 + STATE.clockM * 60) * 1000;
+    STATE.clockOffsetMs = setMs - realMs;
   }
 
   function pad(n) { return String(n).padStart(2, '0'); }
@@ -771,7 +1024,32 @@
     return `<div class="grid-cell ${cls}" onclick="pressButton('${btn}')">${content}</div>`;
   }
 
+  // SET TIMER / CHANGE CLOCK body: uses the standard 6-button screen-grid so the
+  // bottom back-arrow + action cells match the configuration screen exactly. The
+  // up/down adjusters + HH:MM display live in a head spanning the top two rows.
+  function setAdjustGrid(display, actionLabel) {
+    return `
+      <div class="screen-grid">
+        <div class="grid-cell no-border set-head">
+          <div class="set-time-row">
+            ${cell(UP_SVG, 'L1')}
+            ${cell(UP_SVG, 'R1')}
+          </div>
+          <div class="set-time-display">${display}</div>
+          <div class="set-time-row">
+            ${cell(DOWN_SVG, 'L2')}
+            ${cell(DOWN_SVG, 'R2')}
+          </div>
+        </div>
+        ${cell(ARROW_SVG, 'L3')}
+        ${cell(`<span class="cell-label">${actionLabel}</span>`, 'R3')}
+      </div>`;
+  }
+
   const ARROW_SVG = `<svg class="cell-arrow-svg" viewBox="78 94 90 56" fill="#ff7171" xmlns="http://www.w3.org/2000/svg"><path d="M88.76 119.951H123.489L125.169 122.114L123.489 124.366H88.76L83.1586 122.393L88.76 119.951Z"/><path d="M127.596 119.77H162.325L166.059 122.213L162.325 124.186H127.596L125.916 121.753L127.596 119.77Z"/><path d="M85.3992 124.818L104.444 142.306L107.304 147.44L101.27 145.551L82.9719 128.785L79.753 122.716L85.3992 124.818Z"/><path d="M82.7852 115.984L101.27 98.8572L106.844 96.228L104.817 101.381L85.3992 119.23L79.9885 121.656L82.7852 115.984Z"/></svg>`;
+
+  // Up-arrow flanking the home "CLICK LOGO FOR SETTINGS" hint (sized to the text)
+  const HOME_UP_ARROW = `<svg class="home-up-arrow" viewBox="0 0 24 24" fill="none" stroke="#ff7171" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M12 20 L12 5 M5.5 11.5 L12 5 L18.5 11.5"/></svg>`;
 
   const UP_SVG = `<svg class="set-tri-svg" viewBox="0 0 44 30" fill="none" stroke="#ff7171" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><path d="M22 5 L39 25 L5 25 Z"/></svg>`;
   const DOWN_SVG = `<svg class="set-tri-svg" viewBox="0 0 44 30" fill="none" stroke="#ff7171" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><path d="M22 25 L39 5 L5 5 Z"/></svg>`;
@@ -796,27 +1074,27 @@
   // ── Translations ─────────────────────────────────────────
   const STRINGS = {
     ENGLISH: {
-      'SELECT YOUR DRINK':'SELECT YOUR DRINK','CONFIGURATION':'CONFIGURATION',
-      'CHANGE MILK AMOUNT':'CHANGE MILK AMOUNT','CHANGE BEANS AMOUNT':'CHANGE BEANS AMOUNT','CHANGE WATER AMOUNT':'CHANGE SIZE AMOUNT',
-      'CONFIRM SELECTION':'CONFIRM SELECTION','IN PREPARATION':'IN PREPARATION',
+      'SELECT YOUR DRINK':'SELECT DRINK','CONFIGURATION':'CONFIGURATION',
+      'CHANGE MILK AMOUNT':'CHANGE MILK AMOUNT','CHANGE BEANS AMOUNT':'CHANGE BEANS AMOUNT','CHANGE WATER AMOUNT':'CHANGE SIZE AMOUNT','CHANGE AMOUNT':'CHANGE AMOUNT',
+      'CONFIRM SELECTION':'CONFIRM DRINK','IN PREPARATION':'IN PREPARATION',
       'ADD TO FAVORITES':'ADD TO FAVORITES','ADDED TO FAVORITES':'ADDED TO FAVORITES','ADDED TO':'ADDED TO',
       'ENJOY YOUR DRINK':'ENJOY YOUR DRINK',"HERE'S YOUR COFFEE":"HERE'S YOUR<br>COFFEE",
       'SETTINGS':'SETTINGS','CHANGE LANGUAGE':'CHANGE LANGUAGE','CHANGE CLOCK':'CHANGE CLOCK','SET TIMER':'SET TIMER',
-      'TIMER':'TIMER','LANGUAGE':'LANGUAGE','CLOCK':'CLOCK',
-      'OK':'OK','NEXT':'NEXT','START BREWING':'START BREWING','CANCEL':'CANCEL','REPLACE':'REPLACE','ADD':'ADD','STOP':'STOP',
+      'TIMER':'TIMER','LANGUAGE':'LANGUAGE','CLOCK':'CLOCK','CLICK LOGO FOR SETTINGS':'CLICK LOGO FOR SETTINGS',
+      'OK':'OK','START':'START','CONFIRM':'CONFIRM','NEXT':'NEXT','START BREWING':'START BREWING','CANCEL':'CANCEL','REPLACE':'REPLACE','ADD':'ADD','STOP':'STOP',
       'FAVORITE':'FAVORITE','MILK':'MILK','BEANS':'BEANS','WATER':'SIZE',
       'COFFEE ALREADY IN PREPARATION':'COFFEE ALREADY IN PREPARATION',
       'ENGLISH':'ENGLISH','FRENCH':'FRENCH','GERMAN':'GERMAN',
     },
     GERMAN: {
       'SELECT YOUR DRINK':'GETRAENK WAEHLEN','CONFIGURATION':'KONFIGURATION',
-      'CHANGE MILK AMOUNT':'MILCH MENGE AENDERN','CHANGE BEANS AMOUNT':'BOHNEN MENGE AENDERN','CHANGE WATER AMOUNT':'GROESSE AENDERN',
+      'CHANGE MILK AMOUNT':'MILCH MENGE AENDERN','CHANGE BEANS AMOUNT':'BOHNEN MENGE AENDERN','CHANGE WATER AMOUNT':'GROESSE AENDERN','CHANGE AMOUNT':'MENGE AENDERN',
       'CONFIRM SELECTION':'BESTAETIGEN','IN PREPARATION':'IN ZUBEREITUNG',
       'ADD TO FAVORITES':'ZU FAVORITEN','ADDED TO FAVORITES':'ZU FAVORITEN GESPEICHERT','ADDED TO':'GESPEICHERT IN',
       'ENJOY YOUR DRINK':'GENIESSE DEIN GETRAENK',"HERE'S YOUR COFFEE":'HIER IST<br>DEIN KAFFEE',
       'SETTINGS':'EINSTELLUNGEN','CHANGE LANGUAGE':'SPRACHE AENDERN','CHANGE CLOCK':'UHR EINSTELLEN','SET TIMER':'TIMER EINSTELLEN',
-      'TIMER':'TIMER','LANGUAGE':'SPRACHE','CLOCK':'UHR',
-      'OK':'OK','NEXT':'WEITER','START BREWING':'ZUBEREITEN','CANCEL':'ABBRECHEN','REPLACE':'ERSETZEN','ADD':'HINZUFUEGEN','STOP':'STOP',
+      'TIMER':'TIMER','LANGUAGE':'SPRACHE','CLOCK':'UHR','CLICK LOGO FOR SETTINGS':'LOGO FUER EINSTELLUNGEN',
+      'OK':'OK','START':'START','CONFIRM':'BESTAETIGEN','NEXT':'WEITER','START BREWING':'ZUBEREITEN','CANCEL':'ABBRECHEN','REPLACE':'ERSETZEN','ADD':'HINZUFUEGEN','STOP':'STOP',
       'FAVORITE':'FAVORIT','MILK':'MILCH','BEANS':'BOHNEN','WATER':'GROESSE',
       'COFFEE ALREADY IN PREPARATION':'KAFFEE BEREITS IN ZUBEREITUNG',
       'ENGLISH':'ENGLISCH','FRENCH':'FRANZOESISCH','GERMAN':'DEUTSCH',
@@ -828,8 +1106,8 @@
       'ADD TO FAVORITES':'AJOUTER AUX FAVORIS','ADDED TO FAVORITES':'AJOUTE AUX FAVORIS','ADDED TO':'AJOUTE AU FAVORI',
       'ENJOY YOUR DRINK':'PROFITEZ DE VOTRE BOISSON',"HERE'S YOUR COFFEE":'VOICI VOTRE<br>CAFE',
       'SETTINGS':'PARAMETRES','CHANGE LANGUAGE':'CHANGER LA LANGUE','CHANGE CLOCK':'REGLER L HEURE','SET TIMER':'REGLER LE MINUTEUR',
-      'TIMER':'MINUTEUR','LANGUAGE':'LANGUE','CLOCK':'HORLOGE',
-      'OK':'OK','NEXT':'SUIVANT','START BREWING':'PREPARER','CANCEL':'ANNULER','REPLACE':'REMPLACER','ADD':'AJOUTER','STOP':'ARRETER',
+      'TIMER':'MINUTEUR','LANGUAGE':'LANGUE','CLOCK':'HORLOGE','CLICK LOGO FOR SETTINGS':'LOGO POUR PARAMETRES',
+      'OK':'OK','START':'DEMARRER','CONFIRM':'CONFIRMER','NEXT':'SUIVANT','START BREWING':'PREPARER','CANCEL':'ANNULER','REPLACE':'REMPLACER','ADD':'AJOUTER','STOP':'ARRETER',
       'FAVORITE':'FAVORI','MILK':'LAIT','BEANS':'CAFE','WATER':'TAILLE',
       'COFFEE ALREADY IN PREPARATION':'CAFE DEJA EN PREPARATION',
       'ENGLISH':'ANGLAIS','FRENCH':'FRANCAIS','GERMAN':'ALLEMAND',
@@ -846,8 +1124,7 @@
         const t = getTime();
         return `
           <div class="screen-header">
-            <span>${getDateStr()}${stepLabel()}</span>
-            <span class="live-clock">${t}</span>
+            <span class="home-hint">${HOME_UP_ARROW}${T('CLICK LOGO FOR SETTINGS')}${HOME_UP_ARROW}</span>
           </div>
           <div class="screen-divider"></div>
           <div class="home-body">
@@ -867,7 +1144,7 @@
               </div>
             </div>
           </div>
-          <div class="home-footer">${T('TIMER')} : ${t}</div>`;
+          <div class="home-footer">${timerText()}</div>`;
       },
       handleBtn() { navigate('select-drink'); }
     },
@@ -880,7 +1157,7 @@
         // at the top, a back arrow at the bottom, drink types on the right.
         if (creatingFavSlot) {
           return hdr(T('SELECT YOUR DRINK')) + `
-            <div class="screen-grid">
+            <div class="screen-grid sd-grid">
               <div class="grid-cell no-border" onclick="pressButton('L1')"><span class="cell-name">${T('FAVORITE')} ${creatingFavSlot}</span></div>
               <div class="grid-cell" onclick="pressButton('R1')"><span class="cell-name">${drinks[0]}</span></div>
               <div class="grid-cell empty"></div>
@@ -906,7 +1183,7 @@
               <span class="cell-name">${drinks[i]}</span>
             </div>`;
         }
-        return hdr(T('SELECT YOUR DRINK')) + `<div class="screen-grid">${cells}</div>`;
+        return hdr(T('SELECT YOUR DRINK')) + `<div class="screen-grid sd-grid">${cells}</div>`;
       },
       handleBtn(btn) {
         const drinkMap = { R1: STATE.drinks[0], R2: STATE.drinks[1], R3: STATE.drinks[2] };
@@ -943,10 +1220,10 @@
         const a = STATE.amounts;
         return hdr(T('CONFIGURATION')) + `
           <div class="screen-grid">
-            ${cell(`<span class="cell-name">${T('MILK')}</span>${dots(3,a.MILK)}`, 'L1')}
-            ${cell(`<span class="cell-name">${T('BEANS')}</span>${dots(3,a.BEANS)}`, 'R1')}
+            ${cell(`<img class="cfg-icon" src="milk.png" alt="milk">${dots(3,a.MILK)}`, 'L1')}
+            ${cell(`<img class="cfg-icon" src="beans.png" alt="beans">${dots(3,a.BEANS)}`, 'R1')}
             <div class="grid-cell empty"></div>
-            ${cell(`<span class="cell-name">${T('WATER')}</span>${dots(3,a.SIZE)}`, 'R2')}
+            ${cell(`<img class="cfg-icon" src="size.png" alt="size">${dots(3,a.SIZE)}`, 'R2')}
             ${cell(ARROW_SVG, 'L3')}
             ${cell(`<span class="cell-label">${T('NEXT')}</span>`, 'R3')}
           </div>`;
@@ -964,11 +1241,14 @@
     'adjust-beans': {
       render() {
         const item = STATE.selectedItem;
-        return hdr(T(`CHANGE ${item} AMOUNT`)) + `
+        const noMilkCell = item === 'MILK'
+          ? cell(`<span class="cell-label">NO MILK</span>`, 'L2')
+          : '<div class="grid-cell empty"></div>';
+        return hdr(T('CHANGE AMOUNT')) + `
           <div class="screen-grid">
-            ${cell(`<span class="cell-name">${T(item)}</span>`, 'L1', 'no-border')}
+            ${cell(`<img class="cfg-icon" src="${item.toLowerCase()}.png" alt="${item.toLowerCase()}"><span class="cell-name">${T(item)}</span>`, 'L1', 'no-border')}
             ${cell(dots(3,1), 'R1')}
-            <div class="grid-cell empty"></div>
+            ${noMilkCell}
             ${cell(dots(3,2), 'R2')}
             ${cell(ARROW_SVG, 'L3')}
             ${cell(dots(3,3), 'R3')}
@@ -976,7 +1256,7 @@
       },
       handleBtn(btn) {
         if (btn === 'L3') { navigate('configure-drink'); return; }
-        // set the chosen amount for the selected item, then confirm
+        if (btn === 'L2' && STATE.selectedItem === 'MILK') { STATE.amounts.MILK = 0; navigate('configure-drink'); return; }
         const amtMap = { R1: 1, R2: 2, R3: 3 };
         if (btn in amtMap) { STATE.amounts[STATE.selectedItem] = amtMap[btn]; navigate('configure-drink'); }
       }
@@ -1034,21 +1314,12 @@
       },
       handleBtn(btn) {
         if (btn === 'L3') {
-          const elapsed = Date.now() - (STATE.prepStartTime || 0);
-          if (elapsed < 2000) {
-            // Within 2 s: cancel the brew
-            STATE.prepSeg = 0;
-            STATE.prepStartTime = null;
-            navigate('home');
-          } else {
-            // Too late to cancel: show inline error, don't navigate
-            const err = document.getElementById('prep-error');
-            if (err && !err.classList.contains('visible')) {
-              err.textContent = T('COFFEE ALREADY IN PREPARATION');
-              err.classList.add('visible');
-              setTimeout(() => err.classList.remove('visible'), 3000);
-            }
-          }
+          // Cancel is only reachable within the 3-second window (button disappears after)
+          STATE.prepSeg = 0;
+          STATE.prepStartTime = null;
+          if (STATE.cancelHideTimer) { clearTimeout(STATE.cancelHideTimer); STATE.cancelHideTimer = null; }
+          STATE.cancelExpired = false;
+          navigate('home');
           return;
         }
         if (btn === 'R3') {                                                   // open favorites panel
@@ -1059,6 +1330,28 @@
       onEnter() {
         // Record brew start time only on the first entry (not on return from favorites).
         if (!STATE.prepStartTime) STATE.prepStartTime = Date.now();
+
+        // Cancel button disappears 3 s after brew start. On re-entry (e.g. returning
+        // from the favorites panel) recalculate the remaining delay from brew start.
+        if (STATE.cancelHideTimer) { clearTimeout(STATE.cancelHideTimer); STATE.cancelHideTimer = null; }
+        const cancelDelay = Math.max(0, 3000 - (Date.now() - STATE.prepStartTime));
+        if (cancelDelay === 0) {
+          STATE.cancelExpired = true;
+          updateChevrons();
+          document.querySelectorAll('.grid-cell').forEach(c => {
+            if ((c.getAttribute('onclick') || '').includes("'L3'")) c.style.opacity = '0.33';
+          });
+        } else {
+          STATE.cancelExpired = false;
+          STATE.cancelHideTimer = setTimeout(() => {
+            STATE.cancelExpired = true;
+            STATE.cancelHideTimer = null;
+            updateChevrons();
+            document.querySelectorAll('.grid-cell').forEach(c => {
+              if ((c.getAttribute('onclick') || '').includes("'L3'")) c.style.opacity = '0.33';
+            });
+          }, cancelDelay);
+        }
 
         // If we got here while building a favorite, save the preset now.
         if (STATE.creatingFavSlot) {
@@ -1158,7 +1451,7 @@
       onEnter() {
         setTimeout(() => {
           if (STATE.screen === 'drink-ready') fadeOutThen(() => navigate('home'));
-        }, 3000);
+        }, 5000);
       }
     },
 
@@ -1178,7 +1471,12 @@
       handleBtn(btn) {
         if (btn === 'R1') { navigate('settings-timer'); return; }
         if (btn === 'R2') { navigate('settings-language'); return; }
-        if (btn === 'R3') { navigate('settings-clock'); return; }
+        if (btn === 'R3') {
+          // Start the clock editor from the time currently shown on screen.
+          const [h, m] = currentClockHM();
+          STATE.clockH = h; STATE.clockM = m;
+          navigate('settings-clock'); return;
+        }
         if (btn === 'L3') { navigate('home'); return; }
       }
     },
@@ -1206,54 +1504,26 @@
     // 12 ─ CHANGE CLOCK
     'settings-clock': {
       render() {
-        return hdr(T('CHANGE CLOCK')) + `
-          <div class="set-time">
-            <div class="set-time-row">
-              ${cell(UP_SVG, 'L1')}
-              ${cell(UP_SVG, 'R1')}
-            </div>
-            <div class="set-time-display">${pad(STATE.clockH)} : ${pad(STATE.clockM)}</div>
-            <div class="set-time-row">
-              ${cell(DOWN_SVG, 'L2')}
-              ${cell(DOWN_SVG, 'R2')}
-            </div>
-            <div class="set-time-spacer"></div>
-            <div class="set-time-btns">
-              ${cell(ARROW_SVG, 'L3')}
-              ${cell(`<span class="cell-label">${T('OK')}</span>`, 'R3')}
-            </div>
-          </div>`;
+        return hdr(T('CHANGE CLOCK')) + setAdjustGrid(`${pad(STATE.clockH)} : ${pad(STATE.clockM)}`, T('CONFIRM'));
       },
       handleBtn(btn) {
         if (btn === 'L1') STATE.clockH = (STATE.clockH + 1) % 24;
         else if (btn === 'L2') STATE.clockH = (STATE.clockH + 23) % 24;
         else if (btn === 'R1') STATE.clockM = (STATE.clockM + 1) % 60;
         else if (btn === 'R2') STATE.clockM = (STATE.clockM + 59) % 60;
-        else if (btn === 'L3' || btn === 'R3') { navigate('settings'); return; }
+        else if (btn === 'L3') { navigate('settings'); return; }            // cancel: discard
+        else if (btn === 'R3') { applyClockSetting(); Sound.confirm(); navigate('settings'); return; }  // confirm: re-anchor clock
         navigate('settings-clock');
       }
+      // Note: the editor is pre-filled from the live clock when entering from the
+      // settings menu (see settings.handleBtn), NOT in onEnter — otherwise every
+      // up/down re-render would reset the value being edited.
     },
 
     // 13 ─ SET TIMER
     'settings-timer': {
       render() {
-        return hdr(T('SET TIMER')) + `
-          <div class="set-time">
-            <div class="set-time-row">
-              ${cell(UP_SVG, 'L1')}
-              ${cell(UP_SVG, 'R1')}
-            </div>
-            <div class="set-time-display">${pad(STATE.timerMin)} : ${pad(STATE.timerSec)}</div>
-            <div class="set-time-row">
-              ${cell(DOWN_SVG, 'L2')}
-              ${cell(DOWN_SVG, 'R2')}
-            </div>
-            <div class="set-time-spacer"></div>
-            <div class="set-time-btns">
-              ${cell(ARROW_SVG, 'L3')}
-              ${cell(`<span class="cell-label">${T('OK')}</span>`, 'R3')}
-            </div>
-          </div>`;
+        return hdr(T('SET TIMER')) + setAdjustGrid(`${pad(STATE.timerMin)} : ${pad(STATE.timerSec)}`, T('START'));
       },
       handleBtn(btn) {
         if (btn === 'L1') STATE.timerMin = (STATE.timerMin + 1) % 60;
@@ -1263,9 +1533,17 @@
         else if (btn === 'L3') { navigate('settings'); return; }
         else if (btn === 'R3') {
           STATE.runMin = STATE.timerMin; STATE.runSec = STATE.timerSec;
+          STATE.timerArmed = true;
+          Sound.confirm();
           navigate('set-timer-cancel'); return;
         }
         navigate('settings-timer');
+      },
+      onEnter() {
+        // Adjusting a new timer: stop any running countdown and show the set
+        // value on home until START is pressed again.
+        if (STATE.runTimer) { clearInterval(STATE.runTimer); STATE.runTimer = null; }
+        STATE.timerArmed = false;
       }
     },
 
@@ -1274,7 +1552,7 @@
       render() {
         return hdr(T('SET TIMER')) + `
           <div class="set-run">
-            <div class="grid-cell set-run-box"><span class="set-run-num">${pad(STATE.runMin)} : ${pad(STATE.runSec)}</span></div>
+            <div class="grid-cell set-run-box"><div class="set-run-row"><span class="set-run-num set-run-l">${pad(STATE.runMin)}</span><span class="set-run-num"> : </span><span class="set-run-num set-run-r">${pad(STATE.runSec)}</span></div></div>
             <div class="set-time-spacer"></div>
             <div class="set-time-btns">
               ${cell(ARROW_SVG, 'L3')}
@@ -1283,7 +1561,11 @@
           </div>`;
       },
       handleBtn(btn) {
-        if (btn === 'L3') { navigate('settings'); return; }
+        if (btn === 'L3') {
+          if (STATE.runTimer) { clearInterval(STATE.runTimer); STATE.runTimer = null; }
+          STATE.timerArmed = false;
+          navigate('settings'); return;
+        }
         if (btn === 'R3') { navigate('settings-timer'); return; }
       },
       onEnter() {
@@ -1294,9 +1576,12 @@
           if (s < 0) s = 0;
           STATE.runMin = Math.floor(s / 60);
           STATE.runSec = s % 60;
-          const el = document.querySelector('.set-run-num');
-          if (el) el.textContent = `${pad(STATE.runMin)} : ${pad(STATE.runSec)}`;
-          if (s <= 0) { clearInterval(STATE.runTimer); STATE.runTimer = null; }
+          const elL = document.querySelector('.set-run-l');
+          const elR = document.querySelector('.set-run-r');
+          if (elL) elL.textContent = pad(STATE.runMin);
+          if (elR) elR.textContent = pad(STATE.runSec);
+          updateHomeFooter();
+          if (s <= 0) { clearInterval(STATE.runTimer); STATE.runTimer = null; showTimerAlarm(); }
         }, 1000);
       }
     },
@@ -1403,6 +1688,52 @@
   let _navCapture = false;
   let _capturedDest = null;
 
+  // Which side buttons actually do something on the current screen. Mirrors each
+  // screen's handleBtn() — keep in sync if a screen's wiring changes. Active
+  // buttons get a green chevron (see .chev-active).
+  const ALL_BTNS = ['L1','L2','L3','R1','R2','R3'];
+  function activeButtons() {
+    switch (STATE.screen) {
+      // any side button advances / adjusts these screens
+      case 'home':
+      case 'favorite-saved':
+      case 'drink-ready':
+      case 'settings-clock':                 // L1/L2/R1/R2 adjust, L3 back, R3 confirm
+      case 'settings-timer':
+        return ALL_BTNS.slice();
+      case 'select-drink':
+        return STATE.creatingFavSlot
+          ? ['L1','L3','R1','R2','R3']        // L2 unused in the collapsed view
+          : ALL_BTNS.slice();                 // favorites (L) + drink types (R)
+      case 'configure-drink':
+        return ['L1','R1','R2','L3','R3'];     // L2 unused
+      case 'adjust-beans':
+        return STATE.selectedItem === 'MILK'
+          ? ['R1','R2','R3','L3','L2']
+          : ['R1','R2','R3','L3'];             // L1 label; L2 = no-milk only when adjusting milk
+      case 'confirm-selection':
+      case 'set-timer-cancel':
+        return ['L3','R3'];
+      case 'in-preparation':
+        return STATE.cancelExpired ? ['R3'] : ['L3','R3'];
+      case 'add-to-favorites':
+        return ['L1','L2','L3','R3'];          // R1/R2 unused
+      case 'settings':
+      case 'settings-language':
+        return ['R1','R2','R3','L3'];          // L1/L2 unused
+      default:
+        return [];
+    }
+  }
+
+  function updateChevrons() {
+    const active = new Set(activeButtons());
+    ALL_BTNS.forEach(b => {
+      const el = document.querySelector('.btn-' + b);
+      if (el) el.classList.toggle('chev-active', active.has(b));
+    });
+  }
+
   function navigate(id) {
     if (_navCapture) { _capturedDest = id; return; }
     // Don't clear prepTimer when navigating to the favorites overlay —
@@ -1410,12 +1741,14 @@
     if (id !== 'add-to-favorites' && id !== 'favorite-saved') {
       if (STATE.prepTimer) { clearInterval(STATE.prepTimer); STATE.prepTimer = null; }
     }
-    if (STATE.runTimer) { clearInterval(STATE.runTimer); STATE.runTimer = null; }
+    // The run timer keeps counting in the background (so the home footer stays
+    // in sync); it's stopped explicitly on cancel / when re-entering SET TIMER.
     setPaused(false);
     STATE.screen = id;
     const scr = SCREENS[id];
     document.getElementById('screen-root').innerHTML = scr ? scr.render() : '';
     paintBorders();
+    updateChevrons();
     if (scr && scr.onEnter) scr.onEnter();
   }
   let _rsz;
@@ -1441,11 +1774,57 @@
     }, FADE_MS);
   }
 
+  // Timer alarm overlay
+  function showTimerAlarm() {
+    const di = document.querySelector('.display-inner');
+    if (di) di.classList.add('timer-alarming');
+    Sound.startAlarm();
+  }
+  function dismissTimerAlarm() {
+    const di = document.querySelector('.display-inner');
+    if (di) di.classList.remove('timer-alarming');
+    Sound.stopAlarm();
+  }
+
+  // A physical side button with no action on the current screen: shake the
+  // screen to reject the press (still animate the button so it feels pressed).
+  function rejectButton(btn) {
+    const physBtn = document.querySelector('.btn-' + btn);
+    if (physBtn) {
+      physBtn.classList.add('phys-pressed');
+      setTimeout(() => physBtn.classList.remove('phys-pressed'), 200);
+    }
+    const sc = document.getElementById('screen-root');
+    if (sc) {
+      sc.classList.remove('shake');
+      void sc.offsetWidth;                 // force reflow so the animation can replay
+      sc.classList.add('shake');
+      setTimeout(() => sc.classList.remove('shake'), 340);
+    }
+    Sound.error();                         // buzz paired with the shake
+  }
+
   function pressButton(btn) {
+    const _di = document.querySelector('.display-inner');
+    if (_di && _di.classList.contains('timer-alarming')) { dismissTimerAlarm(); return; }
     if (_flashing) return;                 // ignore presses mid-transition
+    if (ALL_BTNS.includes(btn) && !activeButtons().includes(btn)) {
+      rejectButton(btn);                   // dead button on this screen → shake
+      return;
+    }
     _flashing = true;
+    Sound.click();                         // soft click on every valid press
     if (btn === 'SETTINGS') {
       fadeOutThen(() => { _flashing = false; navigate('settings'); });
+      return;
+    }
+    // Logo button: shrink like a side button, then go home — or, if already
+    // home, open settings.
+    if (btn === 'LOGO') {
+      const lb = document.querySelector('.logo-btn');
+      if (lb) { lb.classList.add('phys-pressed'); setTimeout(() => lb.classList.remove('phys-pressed'), 200); }
+      const dest = STATE.screen === 'home' ? 'settings' : 'home';
+      fadeOutThen(() => { _flashing = false; navigate(dest); });
       return;
     }
     const scr = SCREENS[STATE.screen];
@@ -1497,7 +1876,7 @@
     const t = getTime();
     document.querySelectorAll('.live-clock').forEach(el => el.textContent = t);
     document.querySelectorAll('.live-home-time').forEach(el => el.textContent = t);
-    document.querySelectorAll('.home-footer').forEach(el => el.textContent = T('TIMER') + ' : ' + t);
+    updateHomeFooter();
   }, 10000);
 
   // ── Pause / step navigation ──────────────────────────────
@@ -1529,6 +1908,42 @@
   // ── Boot ─────────────────────────────────────────────────
   navigate('home');
 </script>
+
+<!-- Hidden SVG defs: chevron gradient + inlaid inner-shadow filter -->
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <!-- Top-to-bottom green gradient for active chevron strokes -->
+    <linearGradient id="chev-gn" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#A8FFD2"/>
+      <stop offset="38%"  stop-color="#3DFF88"/>
+      <stop offset="100%" stop-color="#1A8040"/>
+    </linearGradient>
+    <!-- Inlaid inner-shadow filter — dark at bottom of stroke, white rim at top -->
+    <filter id="chev-fi" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <!-- ① capture the stroke alpha -->
+      <feColorMatrix in="SourceAlpha" type="matrix"
+        values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 127 0" result="a"/>
+      <!-- ② dark inner shadow at bottom: shift alpha UP, blur, clip to original -->
+      <feOffset    in="a"    dy="-2"   result="sha"/>
+      <feGaussianBlur stdDeviation="1.3" in="sha" result="shab"/>
+      <feComposite in="shab" in2="a" operator="arithmetic" k2="-1" k3="1" result="ishadow"/>
+      <feColorMatrix in="ishadow" type="matrix"
+        values="0 0 0 0 0.0  0 0 0 0 0.22  0 0 0 0 0.06  0 0 0 0.90 0" result="dark"/>
+      <!-- ③ bright rim at top: shift alpha DOWN, blur, clip to original -->
+      <feOffset    in="a"    dy="2"    result="hla"/>
+      <feGaussianBlur stdDeviation="0.9" in="hla" result="hlab"/>
+      <feComposite in="hlab" in2="a" operator="arithmetic" k2="-1" k3="1" result="ilight"/>
+      <feColorMatrix in="ilight" type="matrix"
+        values="0 0 0 0 0.65  0 0 0 0 1  0 0 0 0 0.72  0 0 0 0.78 0" result="light"/>
+      <!-- ④ composite: base stroke → dark overlay → light rim -->
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="dark"/>
+        <feMergeNode in="light"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
 
 </body>
 </html>
