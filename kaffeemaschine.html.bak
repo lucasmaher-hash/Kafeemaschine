@@ -274,7 +274,7 @@
       z-index: -1;
     }
     .grid-cell.fav-cell.selected::before {
-      clip-path: polygon(50% -1.94%, 68.02% 31.98%, 101.94% 50%, 68.02% 68.02%, 50% 101.94%, 31.98% 68.02%, -1.94% 50%, 31.98% 31.98%);
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
       border-radius: 0;
     }
 
@@ -301,7 +301,7 @@
       z-index: -1;
     }
     .grid-cell.fav-cell.btn-light::before {
-      clip-path: polygon(50% -1.94%, 68.02% 31.98%, 101.94% 50%, 68.02% 68.02%, 50% 101.94%, 31.98% 68.02%, -1.94% 50%, 31.98% 31.98%);
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
       border-radius: 0;
     }
 
@@ -586,7 +586,7 @@
       justify-content: center;
     }
     .msg-star .star-svg {
-      width: clamp(95px, 29.7vw, 186px);
+      width: clamp(90px, 28vw, 175px);
       height: auto;
       display: block;
     }
@@ -708,7 +708,6 @@
     // settings
     language: 'ENGLISH',
     clockH: 15, clockM: 4,
-    clockBackupH: 15, clockBackupM: 4,
     timerMin: 15, timerSec: 4,
     runMin: 3, runSec: 35,
     runTimer: null,
@@ -716,10 +715,6 @@
 
   // ── Helpers ──────────────────────────────────────────────
   function getTime() {
-    // On settings screens, show the manually set clock time instead of real time.
-    if (STATE.screen === 'settings-clock' || STATE.screen === 'settings') {
-      return pad(STATE.clockH) + ':' + pad(STATE.clockM);
-    }
     const n = new Date();
     return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
   }
@@ -790,8 +785,8 @@
     return `<div class="hbar">${s}</div>`;
   }
 
-  // ── Favorites star (4-point sparkle outline, gap at each tip, from Figma) ──
-  const STAR_SVG = `<svg class="star-svg" viewBox="0 0 100 100" fill="none" stroke="#ff7171" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M51.63 6.07 L66.26 33.74 L93.93 48.37"/><path d="M93.93 51.63 L66.26 66.26 L51.63 93.93"/><path d="M48.37 93.93 L33.74 66.26 L6.07 51.63"/><path d="M6.07 48.37 L33.74 33.74 L48.37 6.07"/></svg>`;
+  // ── Favorites star (dashed-segment outline, from Figma) ──
+  const STAR_SVG = `<svg class="star-svg" viewBox="0 0 218 211" fill="#ff7171" xmlns="http://www.w3.org/2000/svg"><path d="M77.8594 167.937C82.0176 167.414 85.0629 170.863 83.9355 174.93C83.8065 175.395 83.5456 175.935 83.1694 176.255C78.7762 179.997 73.98 183.292 69.3921 186.794C67.9119 187.92 66.2738 189.223 64.6372 190.07C63.533 190.438 58.9485 190.113 58.2741 189.117C57.752 187.64 58.4763 185.078 58.7595 183.545C59.163 181.803 60.8732 180.848 62.0457 179.747C64.4169 177.522 66.8232 175.586 69.4376 173.674C72.1088 171.719 74.9241 169.467 77.8594 167.937Z"/><path d="M102.816 149.289C109.26 149.966 107.622 150.411 108.364 156.237C107.427 158.309 105.465 159.854 103.503 160.95L103.18 160.782C101.753 161.837 100.545 163.286 99.1266 164.459C95.8726 167.151 92.6288 169.125 89.1856 171.414C86.0366 171.678 84.1798 170.874 83.0637 167.69C81.4322 163.035 88.8109 159.162 91.7942 156.783C94.4684 154.651 99.6583 150.163 102.816 149.289Z"/><path d="M137.955 167.938C138.437 167.921 138.92 167.917 139.402 167.926C141.204 167.963 148.202 173.599 150.029 175.031C152.745 177.162 156.957 179.877 159.274 182.275C159.626 183.877 160.482 187.963 159.781 189.293C159.038 189.838 157.022 189.737 155.813 190.045L155.654 190.087C155.031 190.146 154.328 190.248 153.713 190.093C152.126 189.689 135.351 177.007 134.431 175.351C133.809 174.231 133.726 172.808 134.155 171.613C134.781 169.867 136.316 168.686 137.955 167.938Z"/><path d="M58.1873 154.251C61.4332 154.056 64.4861 156.31 63.8965 159.737C62.7418 166.449 59.5591 172.836 58.1366 179.499C57.5925 182.049 55.5838 182.125 53.8109 183.148L53.6672 183.234C50.9441 185.432 49.5138 183.159 48.4939 180.723C47.2449 177.741 49.1628 174.974 49.8949 172.013C50.7548 169.331 51.1708 166.313 52.2358 163.709C54.0212 159.345 53.2034 156.023 58.1873 154.251Z"/><path d="M158.992 154.112C160.47 154.101 162.616 154.936 163.218 156.406C164.407 159.31 165.256 162.41 166.176 165.414C167.498 169.758 168.895 174.079 170.364 178.375C170.043 180.203 168.593 183.367 166.849 184.187C166.238 184.28 165.868 184.052 165.31 183.801C164.199 183.213 160.839 181.759 160.452 180.644C159.318 177.374 158.274 173.766 157.252 170.446C156.059 166.574 154.692 162.571 153.95 158.633C155.097 155.617 155.743 154.699 158.992 154.112Z"/><path d="M113.718 149.514C115.217 149.232 116.219 149.559 117.419 150.441C120.308 152.565 123.122 154.782 125.964 156.968C128.577 159.077 132.114 161.178 134.356 163.625C136.336 165.787 135.042 169.807 132.509 170.968C131.517 171.422 130.97 171.474 129.947 171.613C127.11 171.277 122.807 167.082 120.535 165.243C117.172 162.521 112.782 159.958 110.027 156.703C109.731 156.353 110.103 150.983 110.217 150.259C111.467 149.861 112.428 149.686 113.718 149.514Z"/><path d="M68.5847 124.881C68.9316 124.844 69.7065 124.754 70.0004 124.932C71.7409 125.983 72.3542 128.394 72.9515 130.191C71.078 137.06 68.8531 144.027 66.749 150.845C66.1266 152.862 63.6745 153.759 61.6858 153.737C61.3307 153.66 60.979 153.568 60.6318 153.461C59.4175 153.09 58.4072 152.242 57.8332 151.113C57.5367 150.52 57.1567 149.213 57.2766 148.562C58.4561 142.154 60.9307 135.54 62.804 129.311C63.7402 126.198 65.5829 126.339 68.5847 124.881Z"/><path d="M168.017 102.981C168.786 102.972 169.824 103.062 170.575 103.26C173.509 104.033 175.37 109.03 172.968 111.159C169.176 114.521 164.737 117.596 160.636 120.613C158.772 121.984 157.096 123.781 155.001 124.727C153.897 124.503 152.58 123.933 151.435 123.654C147.795 122.764 148.672 120.085 149.261 117.16C151.341 114.678 165.312 104.042 168.017 102.981Z"/><path d="M191.008 85.2178C193.305 85.0678 197.918 84.9232 197.659 88.1071C197.525 89.7419 197.456 91.2141 196.992 92.7983C195.646 93.3331 184.171 102.38 182.715 103.71L182.907 103.617C181.582 104.937 181.1 105.273 179.545 106.213C179.44 106.253 179.336 106.291 179.23 106.326C178.081 106.706 176.4 106.43 175.342 105.887C174.133 105.267 173.196 104.123 172.798 102.832C172.362 101.419 172.557 99.9351 173.255 98.6372C174.083 97.0961 186.94 87.4405 188.947 86.1447C189.584 85.7331 190.281 85.4352 191.008 85.2178Z"/><path d="M148.115 124.491C149.199 124.516 153.909 126.276 154.292 127.295C156.781 133.923 158.541 140.844 160.662 147.599C161.477 150.197 159.959 151.998 157.777 153.211C157.131 153.528 156.262 153.654 155.549 153.564C154.185 153.393 152.698 152.788 151.846 151.666C150.896 150.413 146.155 134.105 145.629 131.829C145.448 131.047 145.236 130.196 145.36 129.392C145.614 127.752 146.755 125.51 148.115 124.491Z"/><path d="M25.2506 85.4173C28.3163 85.2539 31.3814 88.6803 33.8159 90.386C37.3256 92.8451 40.931 95.572 44.0836 98.4618C45.6204 99.8706 45.7653 102.75 44.4544 104.345C43.1012 106.082 42.1985 106.377 40.1575 106.737C37.8007 106.585 36.2891 104.812 34.5076 103.503C31.2639 101.12 27.9574 98.6254 24.8093 96.1372C22.9719 94.685 20.7154 93.3736 20.5168 90.887C19.752 85.1845 20.1557 86.1248 25.2506 85.4173Z"/><path d="M47.6886 103.549C48.5219 103.422 49.4339 103.333 50.2525 103.574C52.4989 104.237 67.5705 115.664 68.5174 117.536C69.1269 118.742 69.4219 120.97 69.0174 122.268C68.3586 123.185 65.9065 123.8 64.6582 124.285C64.0673 124.597 62.9996 124.97 62.3681 124.586C58.8654 122.381 55.7492 119.826 52.5035 117.194C50.4648 115.541 45.6879 112.726 44.4186 110.545C43.1415 108.35 44.9117 104.225 47.6886 103.549Z"/><path d="M93.0019 49.4814C95.1749 49.5233 96.9415 50.2494 97.9353 52.3061C99.406 55.3492 96.8645 59.9522 96.0043 63.0577C95.0754 66.4101 93.6432 69.7968 92.6422 73.1258C91.7226 76.1838 90.3077 76.4434 87.621 77.7184C87.0183 77.9784 86.522 78.2956 85.9209 78.1532C84.7774 77.3127 83.0787 73.75 82.5327 72.3825C83.5205 68.1177 85.3941 63.5173 86.6458 59.2821C87.4197 56.6637 88.5577 53.4172 89.8071 51.0367C90.9347 50.3646 91.7984 49.9839 93.0019 49.4814Z"/><path d="M104.199 20.4175C105.869 20.5328 107.409 24.8958 108.083 26.4147C106.896 29.8244 102.011 46.4782 100.272 47.9582C99.2317 48.844 97.9618 49.326 96.592 49.2137C89.3344 47.6122 92.9514 41.0846 94.3636 36.5219C95.6566 32.3441 96.9912 28.1557 98.6443 24.1036C99.5258 21.9429 102.14 21.1433 104.199 20.4175Z"/><path d="M168.442 73.6277C171.456 73.4721 188.332 73.2788 190.009 73.8167C191.407 74.2648 193.366 76.1416 194.035 77.4472C194.275 77.9155 194.347 78.4115 194.157 78.9126C193.721 80.0601 191.053 82.7515 189.965 83.2023C189.07 83.4409 188.073 83.4117 187.142 83.3965C181.018 83.2967 174.881 83.4266 168.762 83.3035C167.946 83.2871 167.109 83.0408 166.34 82.7829C163.46 79.8431 164.098 74.3233 168.442 73.6277Z"/><path d="M28.4681 73.9396C33.4252 73.6249 39.0481 74.1197 44.089 73.9037C46.0862 73.818 49.9841 73.6907 51.5628 74.932C52.6293 75.7871 53.3114 77.0297 53.4591 78.3862C53.6161 79.7198 53.3257 80.3043 52.7101 81.4171C51.6354 83.3603 50.3043 83.4305 48.33 83.6053C45.1963 83.7826 30.1051 84.1907 28.0403 83.4831C26.6768 83.0159 24.4136 80.693 23.862 79.3817C23.6644 78.9051 23.6822 78.3667 23.9109 77.904C24.5404 76.6507 26.9608 74.4292 28.4681 73.9396Z"/><path d="M151.456 73.6499C153.53 73.6207 155.635 73.5407 157.709 73.5376C161.719 73.5318 162.77 75.4893 163.6 78.9226C162.143 83.6825 160.341 83.3806 155.967 83.5086C152.511 83.6098 149.097 83.6115 145.638 83.5792C140.812 83.5751 136.318 84.4169 133.975 79.1987C137.114 74.7643 136.059 73.2025 142.721 73.6704C143.117 73.6983 143.76 73.6778 144.177 73.6807C146.603 73.6993 149.03 73.689 151.456 73.6499Z"/><path d="M113.108 20.217C114.427 20.4755 117.839 21.8636 118.452 23.0354C121.797 29.4254 123.114 37.393 125.882 43.9972C125.812 44.3415 125.732 44.6838 125.643 45.0237C125.053 47.2206 124.297 47.8036 122.47 48.8438C121.762 49.0029 121.02 49.1583 120.293 49.0827C119.071 48.9557 117.907 48.4475 117.131 47.4762C115.821 45.8363 111.123 31.234 110.498 28.5879C110.276 27.6467 110.107 26.707 110.242 25.7402C110.501 23.8812 111.586 21.3719 113.108 20.217Z"/><path d="M123.996 49.4954C125.519 49.4341 127.89 50.4108 128.454 51.8895C130.317 56.7696 131.959 61.7849 133.583 66.7535C134.162 68.525 134.887 70.4537 135.252 72.263C134.741 74.1475 133.734 76.1907 132.38 77.6732C132.062 78.0222 131.596 77.9918 131.143 77.9764C129.85 77.421 126.596 76.2268 126.108 74.968C123.735 68.8456 121.701 62.3523 119.751 56.0803C118.711 52.7342 120.621 50.1999 123.996 49.4954Z"/><path d="M59.2455 73.8063C62.4939 73.6036 66.6314 74.0103 70.007 73.9327C73.2674 73.8575 77.1672 73.7377 80.2898 74.2141C81.0328 74.3276 83.5672 78.4826 83.7826 79.2625C83.7814 79.7455 83.6025 80.0548 83.3225 80.4329C82.0417 82.1625 81.6454 83.0432 79.4553 83.4447C72.9694 83.759 65.6998 83.5821 59.1692 83.5368C53.7528 83.4994 52.2933 74.7042 59.2455 73.8063Z"/></svg>`;
 
   // ── Translations ─────────────────────────────────────────
   const STRINGS = {
@@ -881,7 +876,7 @@
         if (creatingFavSlot) {
           return hdr(T('SELECT YOUR DRINK')) + `
             <div class="screen-grid">
-              <div class="grid-cell no-border" onclick="pressButton('L1')"><span class="cell-name">${T('FAVORITE')} ${creatingFavSlot}</span></div>
+              <div class="grid-cell selected" onclick="pressButton('L1')"><span class="cell-name">${T('FAVORITE')} ${creatingFavSlot}</span></div>
               <div class="grid-cell" onclick="pressButton('R1')"><span class="cell-name">${drinks[0]}</span></div>
               <div class="grid-cell empty"></div>
               <div class="grid-cell" onclick="pressButton('R2')"><span class="cell-name">${drinks[1]}</span></div>
@@ -896,9 +891,9 @@
           const fav = favorites[i];
           const isBottomLeft = L[i] === 'L3';
           const favInner = fav
-            ? `<span class="cell-name">${fav.drink}</span>`
+            ? `<span class="cell-name">${fav.drink}</span><span class="cell-star">${STAR_SVG}</span>`
             : isBottomLeft
-              ? `<span class="cell-name">EMPTY</span>`
+              ? `<span class="cell-name">EMPTY</span><span class="cell-star">${STAR_SVG}</span>`
               : `<span class="cell-name">${T('FAVORITE')} ${i + 1}</span>`;
           cells += `
             <div class="grid-cell fav-cell" onclick="pressButton('${L[i]}')">${favInner}</div>
@@ -1029,7 +1024,7 @@
               <div class="prep-error" id="prep-error"></div>
             </div>
             <div class="grid-cell" onclick="pressButton('L3')"><span class="cell-label">${T('CANCEL')}</span></div>
-            <div class="grid-cell fav-cell" onclick="pressButton('R3')"><span class="cell-label">ADD TO</span></div>
+            <div class="grid-cell fav-cell" onclick="pressButton('R3')"><span class="cell-label">ADD TO</span><span class="cell-star">${STAR_SVG}</span></div>
           </div>`;
       },
       handleBtn(btn) {
@@ -1084,7 +1079,7 @@
             STATE.prepStartTime = null;
             setTimeout(() => fadeOutThen(() => navigate('drink-ready')), 500);
           }
-        }, 1042);
+        }, 572);
       }
     },
 
@@ -1097,7 +1092,7 @@
           const label = fav ? fav.drink : (idx === 2 ? 'EMPTY' : `${T('FAVORITE')} ${idx + 1}`);
 
           const selCls = (sel === idx + 1) ? ' selected' : '';
-          return `<div class="grid-cell fav-cell${selCls}" onclick="pressButton('${btn}')"><span class="cell-name">${label}</span></div>`;
+          return `<div class="grid-cell fav-cell${selCls}" onclick="pressButton('${btn}')"><span class="cell-name">${label}</span><span class="cell-star">${STAR_SVG}</span></div>`;
         };
         // Bottom-right confirm reads REPLACE if the chosen slot is taken, else ADD.
         const taken = sel && STATE.favorites[sel - 1];
@@ -1141,7 +1136,7 @@
       handleBtn() { navigate('home'); },
       onEnter() {
         setTimeout(() => {
-          if (STATE.screen === 'favorite-saved') fadeOutThen(() => navigate('in-preparation'));
+          if (STATE.screen === 'favorite-saved') fadeOutThen(() => navigate('home'));
         }, 2000);
       }
     },
@@ -1335,32 +1330,48 @@
           path = document.createElementNS(SVGNS, 'path');
           svg.appendChild(path);
         }
-        // 4-point sparkle star: tips at N/E/S/W, inner vertices on the
-        // diagonals at ~0.49 of the outer radius, with a small gap at each tip.
+        // Generate a 5-pointed star path
         const cx = w / 2, cy = h / 2;
-        const outerR = (Math.min(cx, cy) - inset - 1) * 1.06;
-        const innerR = outerR * 0.49;
-        const diag = innerR * Math.SQRT1_2; // 45° component for inner vertices
-        const T = [cx, cy - outerR], R = [cx + outerR, cy],
-              B = [cx, cy + outerR], L = [cx - outerR, cy];
-        const NE = [cx + diag, cy - diag], SE = [cx + diag, cy + diag],
-              SW = [cx - diag, cy + diag], NW = [cx - diag, cy - diag];
-        // gap at each tip → pull the polyline ends back along the edges
+        const outerR = Math.min(cx, cy) - inset - 1;
+        const innerR = outerR * 0.382; // golden ratio proportion for star points
+        const points = 5;
         const g = Math.max(4, Math.min(w, h) * 0.0647);
-        const edgeLen = Math.hypot(NE[0] - T[0], NE[1] - T[1]);
-        const f = Math.min(0.4, (g / 2) / edgeLen);
-        const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-        const P = p => `${p[0]} ${p[1]}`;
-        const d =
-          `M ${P(lerp(T, NE, f))} L ${P(NE)} L ${P(lerp(R, NE, f))} ` +
-          `M ${P(lerp(R, SE, f))} L ${P(SE)} L ${P(lerp(B, SE, f))} ` +
-          `M ${P(lerp(B, SW, f))} L ${P(SW)} L ${P(lerp(L, SW, f))} ` +
-          `M ${P(lerp(L, NW, f))} L ${P(NW)} L ${P(lerp(T, NW, f))}`;
+        // Build star path with gaps at each outer point
+        let d = '';
+        for (let i = 0; i < points; i++) {
+          const outerAngle = (i * 2 * Math.PI / points) - Math.PI / 2;
+          const innerAngle = outerAngle + Math.PI / points;
+          const ox = cx + outerR * Math.cos(outerAngle);
+          const oy = cy + outerR * Math.sin(outerAngle);
+          const ix = cx + innerR * Math.cos(innerAngle);
+          const iy = cy + innerR * Math.sin(innerAngle);
+          if (i === 0) {
+            d += `M ${ox} ${oy}`;
+          } else {
+            // Gap before each outer point (except the first)
+            d += `L ${ox} ${oy}`;
+          }
+          d += ` L ${ix} ${iy}`;
+        }
+        d += ' Z';
         path.setAttribute('d', d);
         path.setAttribute('stroke-width', sw);
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', '#ff7171');
-        path.removeAttribute('stroke-dasharray');
+        // Use stroke-dasharray for gaps at each outer point
+        // Calculate total path length approximately
+        const sideLen = Math.sqrt(
+          Math.pow(outerR * Math.cos(0) - innerR * Math.cos(Math.PI / points), 2) +
+          Math.pow(outerR * Math.sin(0) - innerR * Math.sin(Math.PI / points), 2)
+        );
+        const totalLen = points * (sideLen + sideLen); // outer + inner segments
+        const solid = (totalLen - points * g) / (points * 2);
+        const dashParts = [];
+        for (let i = 0; i < points * 2; i++) {
+          dashParts.push(solid);
+          if (i % 2 === 0) dashParts.push(g); // gap after each outer point
+        }
+        path.setAttribute('stroke-dasharray', dashParts.join(' '));
         path.setAttribute('stroke-linejoin', 'round');
         path.setAttribute('stroke-linecap', 'round');
       } else {
@@ -1405,11 +1416,7 @@
 
   function navigate(id) {
     if (_navCapture) { _capturedDest = id; return; }
-    // Don't clear prepTimer when navigating to the favorites overlay —
-    // the brew should keep running in the background.
-    if (id !== 'add-to-favorites' && id !== 'favorite-saved') {
-      if (STATE.prepTimer) { clearInterval(STATE.prepTimer); STATE.prepTimer = null; }
-    }
+    if (STATE.prepTimer) { clearInterval(STATE.prepTimer); STATE.prepTimer = null; }
     if (STATE.runTimer) { clearInterval(STATE.runTimer); STATE.runTimer = null; }
     setPaused(false);
     STATE.screen = id;
